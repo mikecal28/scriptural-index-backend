@@ -1,16 +1,10 @@
 import pandas as pd
 from tqdm import tqdm
 import spacy
+from joblib import Parallel, delayed
 
 tqdm.pandas(desc="Processing")
 nlp = spacy.load('en_core_web_sm')
-
-
-def extract_features(text):
-    doc = nlp(text)
-    keywords = [chunk.text for chunk in doc.noun_chunks]
-    entities = [(ent.text, ent.label_) for ent in doc.ents]
-    return keywords, entities
 
 
 current_book = ""
@@ -62,10 +56,34 @@ for book, chapter, verse, text in verses_list:
     data['Verse'].append(verse)
     data['Text'].append(text)
 
-df = pd.DataFrame(data)
 
-df.set_index(['Book', 'Chapter', 'Verse'], inplace=True)
-df.sort_index(inplace=True)
+def extract_features(text):
+    doc = nlp(text)
+    keywords = [chunk.text for chunk in doc.noun_chunks]
+    entities = [(ent.text, ent.label_) for ent in doc.ents]
+    return keywords, entities
 
 
-print(df.loc[('1 Nephi', '1')])
+def process_text(text):
+    return extract_features(text)
+
+
+def main(data):
+    executor = Parallel(n_jobs=4, backend='multiprocessing')
+    tasks = (delayed(process_text)(text) for text in data['Text'])
+    results = executor(tasks)
+    data['Keywords'], data['Entities'] = zip(*results)
+    return data
+
+
+if __name__ == '__main__':
+    final_data = main(data)
+    df = pd.DataFrame(final_data)
+
+    df['Keywords'] = df['Keywords'].apply(tuple)
+    df['Entities'] = df['Entities'].apply(tuple)
+
+    df.set_index(['Book', 'Chapter', 'Verse', 'Keywords', 'Entities'], inplace=True)
+    df.sort_index(inplace=True)
+
+    print(df.loc[('1 Nephi', '1')])

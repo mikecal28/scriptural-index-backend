@@ -68,4 +68,10 @@ df.set_index(['Book', 'Chapter', 'Verse'], inplace=True)
 df.sort_index(inplace=True)
 
 
+df['Keywords'], df['Entities'] = zip(*df['Text'].progress_apply(extract_features))
+df = df.reset_index()
+df.set_index(['Book', 'Chapter', 'Verse', 'Keywords', 'Entities'], inplace=True)
+df.sort_index(inplace=True)
+
+
 print(df.loc[('1 Nephi', '1')])

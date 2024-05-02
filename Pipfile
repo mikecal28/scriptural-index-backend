@@ -5,6 +5,9 @@ name = "pypi"
 
 [packages]
 pandas = "*"
+spacy = "*"
+tqdm = "*"
+joblib = "*"
 
 [dev-packages]
 
