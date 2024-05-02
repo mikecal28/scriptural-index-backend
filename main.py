@@ -32,4 +32,22 @@ for line in bom_text:
     elif len(line_stack) > 0:
         line_stack.append(line)
 
-print(verses_list)
+
+data = {
+    'Book': [],
+    'Chapter': [],
+    'Verse': [],
+    'Text': []
+}
+
+for book, chapter, verse, text in verses_list:
+    data['Book'].append(book)
+    data['Chapter'].append(chapter)
+    data['Verse'].append(verse)
+    data['Text'].append(text)
+
+df = pd.DataFrame(data)
+
+df.set_index(['Book', 'Chapter', 'Verse'], inplace=True)
+
+print(df.head())
